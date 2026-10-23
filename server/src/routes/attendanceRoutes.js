@@ -14,6 +14,6 @@ router.use(protect);
 router.post('/punch-in', punchIn);
 router.post('/punch-out', punchOut);
 router.get('/today', getTodayAttendance);
-router.get('/monthly', authorize('Super Admin'), getMonthlyAttendance);
+router.get('/monthly', getMonthlyAttendance);
 
 export default router;

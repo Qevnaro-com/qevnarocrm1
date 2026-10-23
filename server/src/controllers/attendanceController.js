@@ -135,8 +135,15 @@ export const getMonthlyAttendance = async (req, res) => {
 
     const regex = new RegExp(`^${targetYear}-${targetMonth}`);
 
-    const records = await Attendance.find({ date: { $regex: regex } }).sort({ date: 1 });
-    const users = await User.find({ status: 'Active' }).select('-password');
+    const query = { date: { $regex: regex } };
+    if (req.user.role !== 'Super Admin') {
+      query.userId = req.user._id;
+    }
+
+    const records = await Attendance.find(query).sort({ date: 1 });
+    const users = req.user.role === 'Super Admin'
+      ? await User.find({ status: 'Active' }).select('-password')
+      : [req.user];
 
     res.status(200).json({
       success: true,

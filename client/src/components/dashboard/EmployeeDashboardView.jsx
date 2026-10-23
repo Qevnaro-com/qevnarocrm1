@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useAttendance } from '../../context/AttendanceContext';
-import { INITIAL_TASKS } from '../../services/mockData';
-import { taskAPI } from '../../services/api';
+import { useTasks } from '../../context/TaskContext';
 import { Link } from 'react-router-dom';
 import {
   Laptop,
@@ -27,19 +26,7 @@ import {
 export const EmployeeDashboardView = ({ onOpenPunchModal }) => {
   const { currentUser } = useAuth();
   const { todayRecord, hasPunchedIn, hasPunchedOut, liveDuration } = useAttendance();
-
-  // Local storage & API backed tasks
-  const [tasks, setTasks] = useState(() => {
-    try {
-      const saved = localStorage.getItem('qevnaro_tasks');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        const clean = Array.isArray(parsed) ? parsed.filter((t) => !String(t._id).startsWith('task_')) : [];
-        return clean;
-      }
-    } catch (e) {}
-    return INITIAL_TASKS;
-  });
+  const { accessibleTasks, createTask, toggleTaskStatus } = useTasks();
 
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [quickTaskTitle, setQuickTaskTitle] = useState('');
@@ -47,98 +34,26 @@ export const EmployeeDashboardView = ({ onOpenPunchModal }) => {
   const [quickDeliverableUrl, setQuickDeliverableUrl] = useState('');
   const [showAddBox, setShowAddBox] = useState(false);
 
-  // Sync tasks from backend API
-  useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const res = await taskAPI.getTasks();
-        if (res.success && Array.isArray(res.tasks)) {
-          setTasks(res.tasks);
-          localStorage.setItem('qevnaro_tasks', JSON.stringify(res.tasks));
-        }
-      } catch (err) {
-        console.warn('Backend tasks sync fallback:', err.message);
-      }
-    };
-    fetchTasks();
-  }, [currentUser]);
-
-  const safeTasks = Array.isArray(tasks) ? tasks : [];
-
-  // Filter tasks assigned to current employee
-  const myTasks = safeTasks.filter(
-    (t) =>
-      String(t.assignedTo) === String(currentUser?._id) ||
-      (currentUser?.name && t.assignedToName?.toLowerCase().includes(currentUser.name.toLowerCase()))
-  );
-
-  const saveTasks = (newTasks) => {
-    setTasks(newTasks);
-    localStorage.setItem('qevnaro_tasks', JSON.stringify(newTasks));
-  };
-
-  const toggleTaskStatus = async (taskId) => {
-    const target = tasks.find((t) => t._id === taskId);
-    if (!target) return;
-
-    const nextStatus =
-      target.status === 'Completed'
-        ? 'In Progress'
-        : target.status === 'In Progress'
-        ? 'Completed'
-        : 'In Progress';
-
-    const updated = tasks.map((t) => (t._id === taskId ? { ...t, status: nextStatus } : t));
-    saveTasks(updated);
-
-    try {
-      await taskAPI.updateTask(taskId, { status: nextStatus });
-    } catch (err) {
-      console.warn('Backend updateTask warning:', err.message);
-    }
-  };
+  const myTasks = Array.isArray(accessibleTasks) ? accessibleTasks : [];
 
   const handleAddQuickTask = async (e) => {
     e.preventDefault();
     if (!quickTaskTitle.trim()) return;
 
-    try {
-      const res = await taskAPI.createTask({
-        title: quickTaskTitle.trim(),
-        priority: quickPriority,
-        assignedTo: currentUser?._id,
-        assignedToName: currentUser?.name,
-        dueDate: new Date().toISOString().slice(0, 10),
-        deliverableUrl: quickDeliverableUrl.trim() || undefined,
-      });
-
-      if (res.success && res.task) {
-        saveTasks([res.task, ...tasks]);
-        setQuickTaskTitle('');
-        setQuickDeliverableUrl('');
-        setShowAddBox(false);
-        return;
-      }
-    } catch (err) {
-      console.warn('Backend createTask fallback:', err.message);
-    }
-
-    // Local fallback
-    const newTask = {
-      _id: `task_${Date.now()}`,
+    const res = await createTask({
       title: quickTaskTitle.trim(),
       priority: quickPriority,
-      status: 'In Progress',
       assignedTo: currentUser?._id,
       assignedToName: currentUser?.name,
       dueDate: new Date().toISOString().slice(0, 10),
       deliverableUrl: quickDeliverableUrl.trim() || undefined,
-    };
+    });
 
-    saveTasks([newTask, ...tasks]);
-    setQuickTaskTitle('');
-    setQuickDeliverableUrl('');
-    setShowAddBox(false);
+    if (res.success) {
+      setQuickTaskTitle('');
+      setQuickDeliverableUrl('');
+      setShowAddBox(false);
+    }
   };
 
   const pendingCount = myTasks.filter((t) => t.status === 'Pending').length;

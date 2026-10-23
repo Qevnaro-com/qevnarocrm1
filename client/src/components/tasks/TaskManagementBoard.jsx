@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { INITIAL_TASKS } from '../../services/mockData';
+import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { taskAPI } from '../../services/api';
+import { useTasks } from '../../context/TaskContext';
 import {
   CheckSquare,
   Plus,
@@ -19,18 +18,7 @@ import {
 
 export const TaskManagementBoard = () => {
   const { currentUser, users, isAdmin } = useAuth();
-
-  const [tasks, setTasks] = useState(() => {
-    try {
-      const saved = localStorage.getItem('qevnaro_tasks');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        const clean = Array.isArray(parsed) ? parsed.filter((t) => !String(t._id).startsWith('task_')) : [];
-        return clean;
-      }
-    } catch (e) {}
-    return INITIAL_TASKS;
-  });
+  const { accessibleTasks, createTask, toggleTaskStatus } = useTasks();
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [filterStatus, setFilterStatus] = useState('ALL');
@@ -43,49 +31,6 @@ export const TaskManagementBoard = () => {
     deliverableUrl: '',
   });
 
-  // Sync tasks from Backend API
-  const fetchTasks = async () => {
-    try {
-      const res = await taskAPI.getTasks();
-      if (res.success && Array.isArray(res.tasks)) {
-        setTasks(res.tasks);
-        localStorage.setItem('qevnaro_tasks', JSON.stringify(res.tasks));
-      }
-    } catch (err) {
-      console.warn('Backend tasks fetch fallback:', err.message);
-    }
-  };
-
-  useEffect(() => {
-    fetchTasks();
-  }, [currentUser]);
-
-  const handleSaveTasks = (updated) => {
-    setTasks(updated);
-    localStorage.setItem('qevnaro_tasks', JSON.stringify(updated));
-  };
-
-  const toggleTaskStatus = async (taskId) => {
-    const target = tasks.find((t) => t._id === taskId);
-    if (!target) return;
-
-    const nextStatus =
-      target.status === 'Completed'
-        ? 'In Progress'
-        : target.status === 'In Progress'
-        ? 'Completed'
-        : 'In Progress';
-
-    const updated = tasks.map((t) => (t._id === taskId ? { ...t, status: nextStatus } : t));
-    handleSaveTasks(updated);
-
-    try {
-      await taskAPI.updateTask(taskId, { status: nextStatus });
-    } catch (err) {
-      console.warn('Backend updateTask warning:', err.message);
-    }
-  };
-
   const handleAddTask = async (e) => {
     e.preventDefault();
     if (!newTask.title.trim()) return;
@@ -93,66 +38,28 @@ export const TaskManagementBoard = () => {
     const assignedUser = users.find((u) => u._id === newTask.assignedTo);
     const assignedName = assignedUser ? assignedUser.name : currentUser?.name;
 
-    try {
-      const res = await taskAPI.createTask({
-        title: newTask.title.trim(),
-        priority: newTask.priority,
-        assignedTo: newTask.assignedTo || currentUser?._id,
-        assignedToName: assignedName,
-        dueDate: newTask.dueDate,
-        deliverableUrl: newTask.deliverableUrl,
-      });
-
-      if (res.success && res.task) {
-        handleSaveTasks([res.task, ...tasks]);
-        setNewTask({
-          title: '',
-          priority: 'Medium',
-          assignedTo: currentUser?._id || '',
-          dueDate: new Date().toISOString().slice(0, 10),
-          deliverableUrl: '',
-        });
-        setShowAddModal(false);
-        return;
-      }
-    } catch (err) {
-      console.warn('Backend createTask fallback:', err.message);
-    }
-
-    // Local fallback
-    const item = {
-      _id: `task_${Date.now()}`,
+    const res = await createTask({
       title: newTask.title.trim(),
       priority: newTask.priority,
-      status: 'Pending',
       assignedTo: newTask.assignedTo || currentUser?._id,
       assignedToName: assignedName,
       dueDate: newTask.dueDate,
       deliverableUrl: newTask.deliverableUrl,
-    };
-
-    handleSaveTasks([item, ...tasks]);
-    setNewTask({
-      title: '',
-      priority: 'Medium',
-      assignedTo: currentUser?._id || '',
-      dueDate: new Date().toISOString().slice(0, 10),
-      deliverableUrl: '',
     });
-    setShowAddModal(false);
+
+    if (res.success) {
+      setNewTask({
+        title: '',
+        priority: 'Medium',
+        assignedTo: currentUser?._id || '',
+        dueDate: new Date().toISOString().slice(0, 10),
+        deliverableUrl: '',
+      });
+      setShowAddModal(false);
+    }
   };
 
-  const accessibleTasks = isAdmin
-    ? tasks
-    : tasks.filter(
-        (t) =>
-          String(t.assignedTo) === String(currentUser?._id) ||
-          (currentUser?.name &&
-            t.assignedToName &&
-            t.assignedToName.toLowerCase().includes(currentUser.name.toLowerCase()))
-      );
-
-  const filteredTasks = accessibleTasks.filter((t) => {
+  const filteredTasks = (accessibleTasks || []).filter((t) => {
     if (filterStatus === 'ALL') return true;
     return t.status === filterStatus;
   });

@@ -1,5 +1,6 @@
 import express from 'express';
 import Task from '../models/Task.js';
+import User from '../models/User.js';
 import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -10,7 +11,7 @@ router.get('/', async (req, res) => {
   try {
     let query = {};
     if (req.user.role !== 'Super Admin') {
-      query.assignedTo = req.user._id;
+      query.$or = [{ assignedTo: req.user._id }, { assignedToName: req.user.name }];
     }
     const tasks = await Task.find(query).sort({ dueDate: 1 });
     res.status(200).json({ success: true, count: tasks.length, tasks });
@@ -23,11 +24,20 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { title, priority, assignedTo, assignedToName, dueDate, deliverableUrl } = req.body;
+    let targetAssigneeId = assignedTo || req.user._id;
+    let targetAssigneeName = assignedToName;
+    if (!targetAssigneeName && targetAssigneeId) {
+      const u = await User.findById(targetAssigneeId);
+      if (u) targetAssigneeName = u.name;
+    }
+    if (!targetAssigneeName) {
+      targetAssigneeName = req.user.name;
+    }
     const task = await Task.create({
       title,
       priority: priority || 'Medium',
-      assignedTo: assignedTo || req.user._id,
-      assignedToName: assignedToName || req.user.name,
+      assignedTo: targetAssigneeId,
+      assignedToName: targetAssigneeName,
       dueDate: dueDate || new Date(),
       deliverableUrl: deliverableUrl || '',
     });

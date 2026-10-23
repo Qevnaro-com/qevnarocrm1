@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, NavLink } from 'react
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LeadProvider } from './context/LeadContext';
 import { AttendanceProvider } from './context/AttendanceContext';
+import { TaskProvider } from './context/TaskContext';
 import Sidebar from './components/common/Sidebar';
 import Navbar from './components/common/Navbar';
 import CsvUploadModal from './components/leads/CsvUploadModal';
@@ -199,12 +200,14 @@ export const App = () => {
     <AuthProvider>
       <LeadProvider>
         <AttendanceProvider>
-          <Router>
-            <Routes>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/*" element={<MainLayout />} />
-            </Routes>
-          </Router>
+          <TaskProvider>
+            <Router>
+              <Routes>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/*" element={<MainLayout />} />
+              </Routes>
+            </Router>
+          </TaskProvider>
         </AttendanceProvider>
       </LeadProvider>
     </AuthProvider>

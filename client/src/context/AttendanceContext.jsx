@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { INITIAL_ATTENDANCE } from '../services/mockData';
 import { useAuth } from './AuthContext';
 import { ATTENDANCE_STATUS } from '../types/constants';
 import { attendanceAPI } from '../services/api';
@@ -9,67 +8,63 @@ const AttendanceContext = createContext(null);
 export const AttendanceProvider = ({ children }) => {
   const { currentUser, users, isAdmin } = useAuth();
 
-  const [records, setRecords] = useState(() => {
-    try {
-      const saved = localStorage.getItem('qevnaro_attendance');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        const clean = Array.isArray(parsed) ? parsed.filter((r) => !String(r._id).startsWith('att_')) : [];
-        return clean;
-      }
-    } catch (e) {}
-    return INITIAL_ATTENDANCE;
-  });
-
+  const [records, setRecords] = useState([]);
   const [liveDuration, setLiveDuration] = useState('00:00:00');
   const [loading, setLoading] = useState(false);
 
   // Today's date string YYYY-MM-DD
   const todayStr = new Date().toISOString().slice(0, 10);
 
-  // Sync attendance records with backend API
+  // Sync attendance records dynamically with backend MongoDB API
   const fetchAttendance = useCallback(async () => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      setRecords([]);
+      return;
+    }
+    setLoading(true);
     try {
       // 1. Fetch user's today attendance status
       const todayRes = await attendanceAPI.getToday();
-      if (todayRes.success && todayRes.record) {
-        setRecords((prev) => {
-          const exists = prev.some((r) => r._id === todayRes.record._id || (r.userId === currentUser._id && r.date === todayStr));
-          if (!exists) {
-            return [todayRes.record, ...prev];
-          }
-          return prev.map((r) =>
-            r.userId === currentUser._id && r.date === todayStr ? todayRes.record : r
-          );
-        });
+
+      // 2. Fetch monthly records for the calendar view
+      const now = new Date();
+      const monthlyRes = await attendanceAPI.getMonthly(now.getFullYear(), now.getMonth() + 1);
+
+      let merged = [];
+      if (monthlyRes.success && Array.isArray(monthlyRes.records)) {
+        merged = monthlyRes.records;
       }
 
-      // 2. If Super Admin, fetch all monthly records
-      if (isAdmin) {
-        const now = new Date();
-        const monthlyRes = await attendanceAPI.getMonthly(now.getFullYear(), now.getMonth() + 1);
-        if (monthlyRes.success && Array.isArray(monthlyRes.records)) {
-          setRecords(monthlyRes.records);
-          localStorage.setItem('qevnaro_attendance', JSON.stringify(monthlyRes.records));
+      if (todayRes.success && todayRes.record) {
+        const exists = merged.some(
+          (r) => r._id === todayRes.record._id || (String(r.userId) === String(currentUser._id) && r.date === todayStr)
+        );
+        if (!exists) {
+          merged = [todayRes.record, ...merged];
+        } else {
+          merged = merged.map((r) =>
+            (String(r.userId) === String(currentUser._id) && r.date === todayStr) ? todayRes.record : r
+          );
         }
       }
+
+      setRecords(merged);
     } catch (err) {
-      console.warn('Backend attendance sync fallback:', err.message);
+      console.warn('Dynamic attendance sync error:', err.message);
+    } finally {
+      setLoading(false);
     }
-  }, [currentUser, isAdmin, todayStr]);
+  }, [currentUser, todayStr]);
 
   useEffect(() => {
     fetchAttendance();
   }, [fetchAttendance]);
 
-  useEffect(() => {
-    localStorage.setItem('qevnaro_attendance', JSON.stringify(records));
-  }, [records]);
-
   // Find today's record for currently logged-in user
   const todayRecord = records.find(
-    (r) => (String(r.userId) === String(currentUser?._id) || r.userName === currentUser?.name) && r.date === todayStr
+    (r) =>
+      (String(r.userId) === String(currentUser?._id) || (currentUser?.name && r.userName?.toLowerCase() === currentUser.name.toLowerCase())) &&
+      r.date === todayStr
   );
 
   const hasPunchedIn = !!todayRecord?.punchIn;
@@ -106,11 +101,10 @@ export const AttendanceProvider = ({ children }) => {
     return () => clearInterval(interval);
   }, [hasPunchedIn, hasPunchedOut, todayRecord]);
 
-  // Punch In Handler connected to Backend API
+  // Punch In Handler dynamically connected to Backend MongoDB API
   const punchIn = async () => {
     if (!currentUser) return { success: false, message: 'Please login first' };
 
-    // Prevent duplicate punch-in on same day
     if (todayRecord) {
       return { success: false, message: 'You have already punched in for today!' };
     }
@@ -121,39 +115,14 @@ export const AttendanceProvider = ({ children }) => {
         setRecords((prev) => [res.attendance, ...prev]);
         return { success: true, message: res.message || 'Punched in successfully!' };
       }
+      return { success: false, message: res.message || 'Punch in failed' };
     } catch (err) {
-      console.warn('Backend punchIn warning, using local:', err.message);
-      if (err.message && err.message.includes('already')) {
-        return { success: false, message: err.message };
-      }
+      console.warn('Dynamic punchIn error:', err.message);
+      return { success: false, message: err.message || 'Failed to punch in' };
     }
-
-    // Local fallback
-    const now = new Date();
-    const isLate = now.getHours() > 9 || (now.getHours() === 9 && now.getMinutes() > 30);
-    const initialStatus = isLate ? ATTENDANCE_STATUS.LATE : ATTENDANCE_STATUS.PRESENT;
-
-    const newRecord = {
-      _id: `att_${Date.now()}`,
-      userId: currentUser._id,
-      userName: currentUser.name,
-      userRole: currentUser.role,
-      date: todayStr,
-      punchIn: now.toISOString(),
-      punchOut: null,
-      status: initialStatus,
-      durationHours: null,
-      workSummary: '',
-    };
-
-    setRecords((prev) => [newRecord, ...prev]);
-    return {
-      success: true,
-      message: `Punched in successfully at ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-    };
   };
 
-  // Punch Out Handler (Mandatory work summary) connected to Backend API
+  // Punch Out Handler dynamically connected to Backend MongoDB API
   const punchOut = async (workSummaryText) => {
     if (!currentUser) return { success: false, message: 'Please login first' };
     if (!todayRecord) return { success: false, message: 'No punch-in recorded for today.' };
@@ -172,44 +141,18 @@ export const AttendanceProvider = ({ children }) => {
       if (res.success && res.attendance) {
         setRecords((prev) =>
           prev.map((r) =>
-            (r._id === todayRecord._id || (r.userId === currentUser._id && r.date === todayStr))
+            (r._id === todayRecord._id || (String(r.userId) === String(currentUser._id) && r.date === todayStr))
               ? res.attendance
               : r
           )
         );
         return { success: true, message: res.message || 'Punched out successfully!' };
       }
+      return { success: false, message: res.message || 'Punch out failed' };
     } catch (err) {
-      console.warn('Backend punchOut warning, using local:', err.message);
+      console.warn('Dynamic punchOut error:', err.message);
+      return { success: false, message: err.message || 'Failed to punch out' };
     }
-
-    // Local fallback
-    const now = new Date();
-    const punchInDate = new Date(todayRecord.punchIn);
-    const diffHours = Math.max(0.1, Number(((now - punchInDate) / (1000 * 60 * 60)).toFixed(2)));
-
-    let finalStatus = todayRecord.status;
-    if (diffHours < 4) {
-      finalStatus = ATTENDANCE_STATUS.HALF_DAY;
-    }
-
-    setRecords((prev) =>
-      prev.map((r) => {
-        if (r._id !== todayRecord._id) return r;
-        return {
-          ...r,
-          punchOut: now.toISOString(),
-          durationHours: diffHours,
-          status: finalStatus,
-          workSummary: trimmedSummary,
-        };
-      })
-    );
-
-    return {
-      success: true,
-      message: `Punched out successfully! Total logged hours: ${diffHours} hrs.`,
-    };
   };
 
   // Stats calculation for Admin and callers
@@ -242,6 +185,7 @@ export const AttendanceProvider = ({ children }) => {
         hasPunchedIn,
         hasPunchedOut,
         liveDuration,
+        loading,
         punchIn,
         punchOut,
         getTodayTeamStats,
@@ -260,3 +204,5 @@ export const useAttendance = () => {
   }
   return context;
 };
+
+export default AttendanceContext;

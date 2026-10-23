@@ -246,42 +246,50 @@ export const AdminDashboardView = ({ onOpenCsvModal, onOpenPunchModal }) => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium">
-                {callers.map((caller) => {
-                  const callerLeads = safeLeads.filter((l) => l.assignedTo === caller._id);
-                  const interested = callerLeads.filter((l) => l.status === LEAD_STATUS.INTERESTED).length;
-                  const converted = callerLeads.filter((l) => l.status === LEAD_STATUS.CONVERTED).length;
-                  const callbacks = callerLeads.filter((l) => l.status === LEAD_STATUS.CALLBACK_REQUIRED).length;
+                {callers.length > 0 ? (
+                  callers.map((caller) => {
+                    const callerLeads = safeLeads.filter((l) => l.assignedTo === caller._id);
+                    const interested = callerLeads.filter((l) => l.status === LEAD_STATUS.INTERESTED).length;
+                    const converted = callerLeads.filter((l) => l.status === LEAD_STATUS.CONVERTED).length;
+                    const callbacks = callerLeads.filter((l) => l.status === LEAD_STATUS.CALLBACK_REQUIRED).length;
 
-                  return (
-                    <tr key={caller._id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3 px-3">
-                        <div className="flex items-center gap-2.5">
-                          <img
-                            src={caller.avatar}
-                            alt={caller.name}
-                            className="w-7 h-7 rounded-lg object-cover ring-1 ring-slate-200"
-                          />
-                          <div>
-                            <p className="font-bold text-slate-900">{caller.name}</p>
-                            <p className="text-[10px] text-slate-400">{caller.email}</p>
+                    return (
+                      <tr key={caller._id} className="hover:bg-slate-50/70 transition-colors">
+                        <td className="py-3 px-3">
+                          <div className="flex items-center gap-2.5">
+                            <img
+                              src={caller.avatar}
+                              alt={caller.name}
+                              className="w-7 h-7 rounded-lg object-cover ring-1 ring-slate-200"
+                            />
+                            <div>
+                              <p className="font-bold text-slate-900">{caller.name}</p>
+                              <p className="text-[10px] text-slate-400">{caller.email}</p>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="py-3 px-3 font-mono font-bold text-slate-700">
-                        {callerLeads.length} leads
-                      </td>
-                      <td className="py-3 px-3 text-emerald-700 font-bold">{interested}</td>
-                      <td className="py-3 px-3 text-purple-700 font-bold">{converted}</td>
-                      <td className="py-3 px-3 text-amber-700 font-bold">{callbacks}</td>
-                      <td className="py-3 px-3">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                          Active
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
+                        </td>
+                        <td className="py-3 px-3 font-mono font-bold text-slate-700">
+                          {callerLeads.length} leads
+                        </td>
+                        <td className="py-3 px-3 text-emerald-700 font-bold">{interested}</td>
+                        <td className="py-3 px-3 text-purple-700 font-bold">{converted}</td>
+                        <td className="py-3 px-3 text-amber-700 font-bold">{callbacks}</td>
+                        <td className="py-3 px-3">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            Active
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="py-6 text-center text-slate-400 text-xs">
+                      No active telecallers found.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

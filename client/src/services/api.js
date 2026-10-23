@@ -5,7 +5,7 @@ const getHeaders = (isMultipart = false) => {
   if (!isMultipart) {
     headers['Content-Type'] = 'application/json';
   }
-  const token = localStorage.getItem('qevnaro_jwt');
+  const token = sessionStorage.getItem('qevnaro_jwt') || localStorage.getItem('qevnaro_jwt');
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }

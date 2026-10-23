@@ -10,8 +10,15 @@ export const AttendanceProvider = ({ children }) => {
   const { currentUser, users, isAdmin } = useAuth();
 
   const [records, setRecords] = useState(() => {
-    const saved = localStorage.getItem('qevnaro_attendance');
-    return saved ? JSON.parse(saved) : INITIAL_ATTENDANCE;
+    try {
+      const saved = localStorage.getItem('qevnaro_attendance');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const clean = Array.isArray(parsed) ? parsed.filter((r) => !String(r._id).startsWith('att_')) : [];
+        return clean;
+      }
+    } catch (e) {}
+    return INITIAL_ATTENDANCE;
   });
 
   const [liveDuration, setLiveDuration] = useState('00:00:00');
@@ -42,7 +49,7 @@ export const AttendanceProvider = ({ children }) => {
       if (isAdmin) {
         const now = new Date();
         const monthlyRes = await attendanceAPI.getMonthly(now.getFullYear(), now.getMonth() + 1);
-        if (monthlyRes.success && Array.isArray(monthlyRes.records) && monthlyRes.records.length > 0) {
+        if (monthlyRes.success && Array.isArray(monthlyRes.records)) {
           setRecords(monthlyRes.records);
           localStorage.setItem('qevnaro_attendance', JSON.stringify(monthlyRes.records));
         }

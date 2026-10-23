@@ -124,31 +124,35 @@ export const AttendancePage = ({ onOpenPunchModal }) => {
         </div>
 
         <div className="space-y-3">
-          {recentSummaries.map((record) => (
-            <div
-              key={record._id}
-              className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2 hover:bg-white transition-colors"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-xs text-slate-800">{record.userName}</span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-brand-navy border border-blue-200">
-                    {record.userRole}
-                  </span>
-                  <span className="text-[11px] text-slate-400">({record.date})</span>
+          {recentSummaries.length > 0 ? (
+            recentSummaries.map((record) => (
+              <div
+                key={record._id}
+                className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2 hover:bg-white transition-colors"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-xs text-slate-800">{record.userName}</span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-brand-navy border border-blue-200">
+                      {record.userRole}
+                    </span>
+                    <span className="text-[11px] text-slate-400">({record.date})</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-slate-500 font-mono">
+                    <span>In: {new Date(record.punchIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span>&bull;</span>
+                    <span>Out: {new Date(record.punchOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span className="font-bold text-brand-navy font-sans">({record.durationHours} hrs)</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 text-xs text-slate-500 font-mono">
-                  <span>In: {new Date(record.punchIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                  <span>&bull;</span>
-                  <span>Out: {new Date(record.punchOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                  <span className="font-bold text-brand-navy font-sans">({record.durationHours} hrs)</span>
-                </div>
+                <p className="text-xs text-slate-700 bg-white p-2.5 rounded-lg border border-slate-200 leading-relaxed">
+                  "{record.workSummary}"
+                </p>
               </div>
-              <p className="text-xs text-slate-700 bg-white p-2.5 rounded-lg border border-slate-200 leading-relaxed">
-                "{record.workSummary}"
-              </p>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-xs text-slate-400 text-center py-6">No shift summaries submitted yet.</p>
+          )}
         </div>
       </div>
     </div>

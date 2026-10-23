@@ -10,16 +10,10 @@ import {
   EyeOff,
   ShieldCheck,
   AlertCircle,
-  Sparkles,
-  KeyRound,
-  CheckCircle2,
-  Headphones,
-  Laptop,
-  Palette
 } from 'lucide-react';
 
 export const LoginPage = () => {
-  const { login, users, currentUser } = useAuth();
+  const { login, currentUser } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
@@ -92,6 +86,7 @@ export const LoginPage = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@qevnaro.com"
+                  autoComplete="email"
                   className="w-full pl-10 pr-3 py-2.5 text-xs rounded-xl border border-slate-300 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/30 focus:border-brand-accent transition-all"
                 />
               </div>
@@ -112,6 +107,7 @@ export const LoginPage = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
+                  autoComplete="current-password"
                   className="w-full pl-10 pr-10 py-2.5 text-xs font-mono rounded-xl border border-slate-300 text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-accent/30 focus:border-brand-accent transition-all"
                 />
                 <button
@@ -145,25 +141,6 @@ export const LoginPage = () => {
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </form>
-
-          {/* Quick Helper for Demo Login reference without buttons */}
-          <div className="pt-3 border-t border-slate-100 text-center">
-            <details className="text-left group">
-              <summary className="text-[11px] text-slate-400 font-semibold cursor-pointer hover:text-brand-accent transition-colors flex items-center justify-between">
-                <span>View Registered Account Emails</span>
-                <span className="text-[10px] text-brand-accent group-open:rotate-180 transition-transform">▼</span>
-              </summary>
-              <div className="mt-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 space-y-1.5 font-mono">
-                <p><strong>Admin:</strong> admin@qevnaro.com</p>
-                <p><strong>Caller:</strong> rajesh@qevnaro.com</p>
-                <p><strong>Frontend Dev:</strong> aman@qevnaro.com</p>
-                <p><strong>UI Designer:</strong> priya@qevnaro.com</p>
-                <p className="text-[10px] text-slate-400 pt-1 font-sans">
-                  *Passwords can be updated or reset by the Super Admin in Team Management.
-                </p>
-              </div>
-            </details>
-          </div>
         </div>
 
         {/* Security Footer Notice */}

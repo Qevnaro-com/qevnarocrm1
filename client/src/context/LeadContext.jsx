@@ -10,8 +10,16 @@ export const LeadProvider = ({ children }) => {
   const { currentUser, isAdmin, users } = useAuth();
 
   const [leads, setLeads] = useState(() => {
-    const saved = localStorage.getItem('qevnaro_leads');
-    return saved ? JSON.parse(saved) : INITIAL_LEADS;
+    try {
+      const saved = localStorage.getItem('qevnaro_leads');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Filter out legacy dummy leads
+        const clean = Array.isArray(parsed) ? parsed.filter((l) => !String(l._id).startsWith('lead_10')) : [];
+        return clean;
+      }
+    } catch (e) {}
+    return INITIAL_LEADS;
   });
 
   const [loading, setLoading] = useState(false);
@@ -22,7 +30,7 @@ export const LeadProvider = ({ children }) => {
     setLoading(true);
     try {
       const res = await leadAPI.getLeads();
-      if (res.success && Array.isArray(res.leads) && res.leads.length > 0) {
+      if (res.success && Array.isArray(res.leads)) {
         setLeads(res.leads);
         localStorage.setItem('qevnaro_leads', JSON.stringify(res.leads));
       }

@@ -72,11 +72,10 @@ const startServer = async () => {
     });
     console.log('[QevnaroCRM] MongoDB connected successfully.');
 
-    // Seed IT team & leads if needed
+    // Ensure admin and default users exist if database is empty
     const userCount = await User.countDocuments();
-    const leadCount = await Lead.countDocuments();
-    if (userCount < 5 || leadCount === 0) {
-      console.log('[QevnaroCRM] Checking/seeding initial IT solution data...');
+    if (userCount === 0) {
+      console.log('[QevnaroCRM] Initializing default users...');
       await runSeed();
     }
 

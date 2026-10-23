@@ -10,38 +10,7 @@ import Task from '../models/Task.js';
 export const getLeads = async (req, res) => {
   try {
     if (mongoose.connection.readyState !== 1) {
-      const demoLeads = [
-        {
-          _id: 'lead_101',
-          name: 'Aditya Oberoi',
-          company: 'Apex Logistics Global',
-          phone: '+919820012345',
-          email: 'aditya.oberoi@apexlogistics.in',
-          city: 'Mumbai',
-          service: 'Enterprise CRM Suite',
-          status: 'New',
-          assignedTo: 'usr_caller_1',
-          assignedToName: 'Rajesh Sharma',
-          notes: 'Inquired for supply chain CRM software.',
-          history: [],
-        },
-        {
-          _id: 'lead_102',
-          name: 'Kavita Sundaram',
-          company: 'Sundaram Health Tech',
-          phone: '+919845098765',
-          email: 'kavita@sundaramhealth.com',
-          city: 'Bangalore',
-          service: 'Telecalling & IVR Setup',
-          status: 'Callback Required',
-          assignedTo: 'usr_caller_1',
-          assignedToName: 'Rajesh Sharma',
-          notes: 'Requested callback tomorrow at 3 PM.',
-          callbackDate: new Date(Date.now() + 86400000).toISOString(),
-          history: [],
-        },
-      ];
-      return res.status(200).json({ success: true, count: demoLeads.length, leads: demoLeads });
+      return res.status(200).json({ success: true, count: 0, leads: [] });
     }
 
     const conditions = [];

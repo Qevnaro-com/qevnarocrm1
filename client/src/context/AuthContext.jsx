@@ -12,12 +12,25 @@ export const AuthProvider = ({ children }) => {
   });
 
   const [currentUser, setCurrentUser] = useState(() => {
-    const saved = localStorage.getItem('qevnaro_current_user');
-    return saved ? JSON.parse(saved) : INITIAL_USERS[0]; // Default to Super Admin
+    try {
+      // Purge any stale legacy auto-login saved in localStorage
+      localStorage.removeItem('qevnaro_current_user');
+      localStorage.removeItem('qevnaro_jwt');
+
+      // Check current active session
+      const sessionUser = sessionStorage.getItem('qevnaro_current_user');
+      const sessionToken = sessionStorage.getItem('qevnaro_jwt');
+      if (sessionUser && sessionToken) {
+        return JSON.parse(sessionUser);
+      }
+    } catch (e) {
+      console.warn('Session parse error:', e);
+    }
+    return null; // Always null when app is newly opened -> redirects to login!
   });
 
   const [token, setToken] = useState(() => {
-    return localStorage.getItem('qevnaro_jwt') || null;
+    return sessionStorage.getItem('qevnaro_jwt') || null;
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -51,12 +64,16 @@ export const AuthProvider = ({ children }) => {
   }, [users]);
 
   useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem('qevnaro_current_user', JSON.stringify(currentUser));
+    if (currentUser && token) {
+      sessionStorage.setItem('qevnaro_current_user', JSON.stringify(currentUser));
+      sessionStorage.setItem('qevnaro_jwt', token);
     } else {
+      sessionStorage.removeItem('qevnaro_current_user');
+      sessionStorage.removeItem('qevnaro_jwt');
       localStorage.removeItem('qevnaro_current_user');
+      localStorage.removeItem('qevnaro_jwt');
     }
-  }, [currentUser]);
+  }, [currentUser, token]);
 
   // Switch role / user (convenient for testing and role previews)
   const switchUser = async (userId) => {
@@ -78,7 +95,8 @@ export const AuthProvider = ({ children }) => {
       if (res.success) {
         setCurrentUser(res.user);
         setToken(res.token);
-        localStorage.setItem('qevnaro_jwt', res.token);
+        sessionStorage.setItem('qevnaro_jwt', res.token);
+        sessionStorage.setItem('qevnaro_current_user', JSON.stringify(res.user));
         return;
       }
     } catch (e) {
@@ -88,7 +106,8 @@ export const AuthProvider = ({ children }) => {
     setCurrentUser(target);
     const mockToken = `jwt_${target._id}_${Date.now()}`;
     setToken(mockToken);
-    localStorage.setItem('qevnaro_jwt', mockToken);
+    sessionStorage.setItem('qevnaro_jwt', mockToken);
+    sessionStorage.setItem('qevnaro_current_user', JSON.stringify(target));
   };
 
   // Login handler connected to backend API
@@ -103,8 +122,9 @@ export const AuthProvider = ({ children }) => {
       const res = await authAPI.login(email.trim(), password.trim());
       if (res.success && res.token) {
         setToken(res.token);
-        localStorage.setItem('qevnaro_jwt', res.token);
         setCurrentUser(res.user);
+        sessionStorage.setItem('qevnaro_jwt', res.token);
+        sessionStorage.setItem('qevnaro_current_user', JSON.stringify(res.user));
         setIsLoading(false);
         fetchUsers();
         return { success: true, user: res.user };
@@ -143,13 +163,15 @@ export const AuthProvider = ({ children }) => {
     setCurrentUser(found);
     const mockToken = `jwt_${found._id}_${Date.now()}`;
     setToken(mockToken);
-    localStorage.setItem('qevnaro_jwt', mockToken);
+    sessionStorage.setItem('qevnaro_jwt', mockToken);
+    sessionStorage.setItem('qevnaro_current_user', JSON.stringify(found));
     return { success: true, user: found };
   };
 
   const logout = () => {
     setCurrentUser(null);
     setToken(null);
+    sessionStorage.clear();
     localStorage.removeItem('qevnaro_jwt');
     localStorage.removeItem('qevnaro_current_user');
   };

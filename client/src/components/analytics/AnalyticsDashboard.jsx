@@ -163,40 +163,48 @@ export const AnalyticsDashboard = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {callerMetrics.map((item) => (
-                <tr key={item.caller._id} className="hover:bg-slate-50/70">
-                  <td className="p-3">
-                    <div className="flex items-center gap-2.5">
-                      <img
-                        src={item.caller.avatar}
-                        alt={item.caller.name}
-                        className="w-7 h-7 rounded-full object-cover ring-1 ring-slate-200"
-                      />
-                      <div>
-                        <p className="font-bold text-slate-800 leading-tight">{item.caller.name}</p>
-                        <p className="text-[10px] text-slate-400">{item.caller.email}</p>
+              {callerMetrics.length > 0 ? (
+                callerMetrics.map((item) => (
+                  <tr key={item.caller._id} className="hover:bg-slate-50/70">
+                    <td className="p-3">
+                      <div className="flex items-center gap-2.5">
+                        <img
+                          src={item.caller.avatar}
+                          alt={item.caller.name}
+                          className="w-7 h-7 rounded-full object-cover ring-1 ring-slate-200"
+                        />
+                        <div>
+                          <p className="font-bold text-slate-800 leading-tight">{item.caller.name}</p>
+                          <p className="text-[10px] text-slate-400">{item.caller.email}</p>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="p-3 text-center font-bold text-slate-700">{item.totalAssigned}</td>
-                  <td className="p-3 text-center font-mono font-bold text-blue-600 bg-blue-50/40">
-                    {item.dials}
-                  </td>
-                  <td className="p-3 text-center font-mono text-sky-700">{item.connected}</td>
-                  <td className="p-3 text-center font-mono font-bold text-emerald-600">
-                    {item.interested}
-                  </td>
-                  <td className="p-3 text-center font-mono text-amber-700">{item.callbacks}</td>
-                  <td className="p-3 text-center font-mono font-bold text-purple-700 bg-purple-50/40">
-                    {item.closed}
-                  </td>
-                  <td className="p-3 text-center">
-                    <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
-                      {item.conversionRate}%
-                    </span>
+                    </td>
+                    <td className="p-3 text-center font-bold text-slate-700">{item.totalAssigned}</td>
+                    <td className="p-3 text-center font-mono font-bold text-blue-600 bg-blue-50/40">
+                      {item.dials}
+                    </td>
+                    <td className="p-3 text-center font-mono text-sky-700">{item.connected}</td>
+                    <td className="p-3 text-center font-mono font-bold text-emerald-600">
+                      {item.interested}
+                    </td>
+                    <td className="p-3 text-center font-mono text-amber-700">{item.callbacks}</td>
+                    <td className="p-3 text-center font-mono font-bold text-purple-700 bg-purple-50/40">
+                      {item.closed}
+                    </td>
+                    <td className="p-3 text-center">
+                      <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
+                        {item.conversionRate}%
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={8} className="p-6 text-center text-slate-400">
+                    No telecallers currently registered.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

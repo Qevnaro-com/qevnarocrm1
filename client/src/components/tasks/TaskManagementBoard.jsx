@@ -21,8 +21,15 @@ export const TaskManagementBoard = () => {
   const { currentUser, users, isAdmin } = useAuth();
 
   const [tasks, setTasks] = useState(() => {
-    const saved = localStorage.getItem('qevnaro_tasks');
-    return saved ? JSON.parse(saved) : INITIAL_TASKS;
+    try {
+      const saved = localStorage.getItem('qevnaro_tasks');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const clean = Array.isArray(parsed) ? parsed.filter((t) => !String(t._id).startsWith('task_')) : [];
+        return clean;
+      }
+    } catch (e) {}
+    return INITIAL_TASKS;
   });
 
   const [showAddModal, setShowAddModal] = useState(false);
@@ -40,7 +47,7 @@ export const TaskManagementBoard = () => {
   const fetchTasks = async () => {
     try {
       const res = await taskAPI.getTasks();
-      if (res.success && Array.isArray(res.tasks) && res.tasks.length > 0) {
+      if (res.success && Array.isArray(res.tasks)) {
         setTasks(res.tasks);
         localStorage.setItem('qevnaro_tasks', JSON.stringify(res.tasks));
       }

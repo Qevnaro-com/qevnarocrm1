@@ -4,11 +4,13 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import dns from 'dns';
 
-// Fix for Windows DNS ETIMEOUT on MongoDB Atlas SRV TXT records
-try {
-  dns.setServers(['8.8.8.8', '1.1.1.1']);
-} catch (e) {
-  console.warn('DNS server override warning:', e.message);
+// Fix for Windows DNS ETIMEOUT on MongoDB Atlas SRV TXT records (Windows only)
+if (process.platform === 'win32') {
+  try {
+    dns.setServers(['8.8.8.8', '1.1.1.1']);
+  } catch (e) {
+    console.warn('DNS server override warning:', e.message);
+  }
 }
 
 // Routes

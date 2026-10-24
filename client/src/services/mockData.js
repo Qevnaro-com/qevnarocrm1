@@ -3,7 +3,7 @@ import { ROLES, LEAD_STATUS, ATTENDANCE_STATUS } from '../types/constants';
 export const INITIAL_USERS = [
   {
     _id: 'usr_admin_1',
-    name: 'Vikram Malhotra',
+    name: 'adminqevnaro',
     email: 'admin@qevnaro.com',
     password: 'adminpassword123',
     role: ROLES.SUPER_ADMIN,
@@ -25,30 +25,7 @@ export const INITIAL_USERS = [
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
     status: 'Active',
   },
-  {
-    _id: 'usr_caller_2',
-    name: 'Priya Patel',
-    email: 'priya@qevnaro.com',
-    password: 'priyapassword123',
-    role: ROLES.CALLER,
-    designation: 'UI/UX & Senior Graphic Designer',
-    department: 'Graphic Design & UI/UX',
-    phone: '+91 98333 44556',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
-    status: 'Active',
-  },
-  {
-    _id: 'usr_emp_1',
-    name: 'Aman Verma',
-    email: 'aman@qevnaro.com',
-    password: 'amanpassword123',
-    role: ROLES.EMPLOYEE,
-    designation: 'Senior Frontend Developer (React / Next.js)',
-    department: 'Frontend Development',
-    phone: '+91 98444 55667',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
-    status: 'Active',
-  },
+
   {
     _id: 'usr_emp_2',
     name: 'Neha Mehta',

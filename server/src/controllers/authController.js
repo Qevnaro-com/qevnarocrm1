@@ -21,7 +21,7 @@ export const login = async (req, res) => {
     // Fallback only if MongoDB is not connected
     if (mongoose.connection.readyState !== 1) {
       const demoUsers = [
-        { _id: 'usr_admin_1', name: 'Vikram Malhotra', email: 'admin@qevnaro.com', role: 'Super Admin', department: 'Management' },
+        { _id: 'usr_admin_1', name: 'adminqevnaro', email: 'admin@qevnaro.com', role: 'Super Admin', department: 'Management' },
         { _id: 'usr_caller_1', name: 'Rajesh Sharma', email: 'rajesh@qevnaro.com', role: 'Caller', department: 'Sales & Telecalling' },
         { _id: 'usr_caller_2', name: 'Priya Patel', email: 'priya@qevnaro.com', role: 'Caller', department: 'Sales & Telecalling' },
         { _id: 'usr_emp_1', name: 'Neha Mehta', email: 'neha@qevnaro.com', role: 'Employee', department: 'Client Operations' },
@@ -124,7 +124,7 @@ export const getAllUsers = async (req, res) => {
   try {
     if (mongoose.connection.readyState !== 1) {
       const demoUsers = [
-        { _id: 'usr_admin_1', name: 'Vikram Malhotra', email: 'admin@qevnaro.com', role: 'Super Admin', department: 'Management & Architecture', designation: 'IT Director & Technical Architect', status: 'Active' },
+        { _id: 'usr_admin_1', name: 'adminqevnaro', email: 'admin@qevnaro.com', role: 'Super Admin', department: 'Management & Architecture', designation: 'IT Director & Technical Architect', status: 'Active' },
         { _id: 'usr_caller_1', name: 'Rajesh Sharma', email: 'rajesh@qevnaro.com', role: 'Caller', department: 'IT Sales & B2B Telecalling', designation: 'IT Telecaller & B2B Client Closer', status: 'Active' },
         { _id: 'usr_caller_2', name: 'Priya Patel', email: 'priya@qevnaro.com', role: 'Caller', department: 'Graphic Design & UI/UX', designation: 'UI/UX & Senior Graphic Designer', status: 'Active' },
         { _id: 'usr_emp_1', name: 'Aman Verma', email: 'aman@qevnaro.com', role: 'Employee', department: 'Frontend Development', designation: 'Senior Frontend Developer (React / Next.js)', status: 'Active' },

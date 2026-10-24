@@ -30,7 +30,7 @@ export const runSeed = async () => {
     // 1. Upsert IT Specialists / Users
     const usersData = [
       {
-        name: 'Vikram Malhotra',
+        name: 'adminqevnaro',
         email: 'admin@qevnaro.com',
         password: 'adminpassword123',
         role: 'Super Admin',

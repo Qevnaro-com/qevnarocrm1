@@ -23,7 +23,7 @@ const attendanceSchema = new mongoose.Schema(
     },
     punchIn: {
       type: Date,
-      required: true,
+      default: null,
     },
     punchOut: {
       type: Date,
@@ -37,9 +37,17 @@ const attendanceSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    leaveReason: {
+      type: String,
+      default: '',
+    },
+    leaveType: {
+      type: String,
+      default: 'Full Day Leave',
+    },
     status: {
       type: String,
-      enum: ['Present', 'Late', 'Half Day', 'Absent'],
+      enum: ['Present', 'Late', 'Half Day', 'Absent', 'Leave'],
       default: 'Present',
     },
   },

@@ -25,7 +25,7 @@ import {
 export const CallerDashboardView = ({ onOpenPunchModal }) => {
   const { currentUser } = useAuth();
   const { accessibleLeads = [], currentLeadIndex, setCurrentLeadIndex } = useLeads();
-  const { hasPunchedIn, hasPunchedOut, liveDuration } = useAttendance();
+  const { hasPunchedIn, hasPunchedOut, isOnLeave, liveDuration } = useAttendance();
   const navigate = useNavigate();
 
   const [copiedPhone, setCopiedPhone] = useState(null);
@@ -176,7 +176,11 @@ export const CallerDashboardView = ({ onOpenPunchModal }) => {
             <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Shift</span>
             <div
               className={`w-7 h-7 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center ${
-                hasPunchedIn ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
+                isOnLeave
+                  ? 'bg-purple-50 text-purple-600'
+                  : hasPunchedIn
+                  ? 'bg-emerald-50 text-emerald-600'
+                  : 'bg-amber-50 text-amber-600'
               }`}
             >
               <CalendarCheck2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -187,8 +191,10 @@ export const CallerDashboardView = ({ onOpenPunchModal }) => {
               {liveDuration.slice(0, 8)}
             </p>
             <div className="flex items-center justify-between mt-0.5">
-              <span className="text-[10px] sm:text-xs font-semibold text-emerald-600">
-                {hasPunchedOut ? 'Completed' : hasPunchedIn ? 'Active' : 'Punch In'}
+              <span className={`text-[10px] sm:text-xs font-semibold ${
+                isOnLeave ? 'text-purple-600' : 'text-emerald-600'
+              }`}>
+                {isOnLeave ? 'On Leave' : hasPunchedOut ? 'Completed' : hasPunchedIn ? 'Active' : 'Punch In'}
               </span>
               <span className="text-[9px] sm:text-[10px] text-brand-accent font-bold group-hover:underline">Clock &rarr;</span>
             </div>

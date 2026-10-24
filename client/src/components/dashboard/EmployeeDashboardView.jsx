@@ -25,7 +25,7 @@ import {
 
 export const EmployeeDashboardView = ({ onOpenPunchModal }) => {
   const { currentUser } = useAuth();
-  const { todayRecord, hasPunchedIn, hasPunchedOut, liveDuration } = useAttendance();
+  const { todayRecord, hasPunchedIn, hasPunchedOut, isOnLeave, liveDuration } = useAttendance();
   const { accessibleTasks, createTask, toggleTaskStatus } = useTasks();
 
   const [filterStatus, setFilterStatus] = useState('ALL');
@@ -101,7 +101,9 @@ export const EmployeeDashboardView = ({ onOpenPunchModal }) => {
             <button
               onClick={onOpenPunchModal}
               className={`flex-1 sm:flex-initial justify-center px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl font-bold text-xs flex items-center gap-2 transition-all active:scale-95 shadow-brand ${
-                hasPunchedOut
+                isOnLeave
+                  ? 'bg-purple-600 text-white hover:bg-purple-700'
+                  : hasPunchedOut
                   ? 'bg-slate-700 text-white'
                   : hasPunchedIn
                   ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
@@ -110,7 +112,9 @@ export const EmployeeDashboardView = ({ onOpenPunchModal }) => {
             >
               <Clock className="w-4 h-4" />
               <span>
-                {hasPunchedOut
+                {isOnLeave
+                  ? 'On Leave Today'
+                  : hasPunchedOut
                   ? 'Shift Completed'
                   : hasPunchedIn
                   ? `Punched In (${liveDuration.slice(0, 5)})`

@@ -45,7 +45,7 @@ export const AdminDashboardView = ({ onOpenCsvModal, onOpenPunchModal }) => {
   const employees = safeUsers.filter((u) => u.role === ROLES.EMPLOYEE && u.status === 'Active');
 
   // Today's attendance stats
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
   const todayLogs = safeRecords.filter((r) => r.date === today);
   const presentCount = todayLogs.filter((r) => r.status === 'Present' || r.status === 'Late').length;
 

@@ -12,8 +12,11 @@ export const AttendanceProvider = ({ children }) => {
   const [liveDuration, setLiveDuration] = useState('00:00:00');
   const [loading, setLoading] = useState(false);
 
-  // Today's date string YYYY-MM-DD
-  const todayStr = new Date().toISOString().slice(0, 10);
+  // Today's date string YYYY-MM-DD in IST
+  const getTodayStr = () => {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
+  };
+  const todayStr = getTodayStr();
 
   // Sync attendance records dynamically with backend MongoDB API
   const fetchAttendance = useCallback(async () => {
@@ -69,11 +72,14 @@ export const AttendanceProvider = ({ children }) => {
 
   const hasPunchedIn = !!todayRecord?.punchIn;
   const hasPunchedOut = !!todayRecord?.punchOut;
+  const isOnLeave = todayRecord?.status === ATTENDANCE_STATUS.LEAVE;
 
   // Running live timer when punched in
   useEffect(() => {
-    if (!hasPunchedIn || hasPunchedOut) {
-      if (hasPunchedOut && todayRecord?.durationHours) {
+    if (!hasPunchedIn || hasPunchedOut || isOnLeave) {
+      if (isOnLeave) {
+        setLiveDuration('On Leave Today');
+      } else if (hasPunchedOut && todayRecord?.durationHours) {
         const totalMinutes = Math.floor(todayRecord.durationHours * 60);
         const hrs = Math.floor(totalMinutes / 60);
         const mins = totalMinutes % 60;
@@ -99,11 +105,15 @@ export const AttendanceProvider = ({ children }) => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [hasPunchedIn, hasPunchedOut, todayRecord]);
+  }, [hasPunchedIn, hasPunchedOut, isOnLeave, todayRecord]);
 
   // Punch In Handler dynamically connected to Backend MongoDB API
   const punchIn = async () => {
     if (!currentUser) return { success: false, message: 'Please login first' };
+
+    if (isOnLeave) {
+      return { success: false, message: 'You are marked On Leave for today. Punch-in is disabled.' };
+    }
 
     if (todayRecord) {
       return { success: false, message: 'You have already punched in for today!' };
@@ -125,6 +135,7 @@ export const AttendanceProvider = ({ children }) => {
   // Punch Out Handler dynamically connected to Backend MongoDB API
   const punchOut = async (workSummaryText) => {
     if (!currentUser) return { success: false, message: 'Please login first' };
+    if (isOnLeave) return { success: false, message: 'You are on Leave today.' };
     if (!todayRecord) return { success: false, message: 'No punch-in recorded for today.' };
     if (todayRecord.punchOut) return { success: false, message: 'You have already punched out today.' };
 
@@ -155,21 +166,49 @@ export const AttendanceProvider = ({ children }) => {
     }
   };
 
+  // Apply Leave Handler dynamically connected to Backend MongoDB API
+  const applyLeave = async ({ date, leaveReason, leaveType, userId } = {}) => {
+    if (!currentUser) return { success: false, message: 'Please login first' };
+    try {
+      const res = await attendanceAPI.applyLeave({
+        date: date || todayStr,
+        leaveReason,
+        leaveType,
+        userId: userId || currentUser._id,
+      });
+      if (res.success && res.attendance) {
+        setRecords((prev) => {
+          const filtered = prev.filter(
+            (r) => !(String(r.userId) === String(res.attendance.userId) && r.date === res.attendance.date)
+          );
+          return [res.attendance, ...filtered];
+        });
+        return { success: true, message: res.message || 'Leave marked successfully!' };
+      }
+      return { success: false, message: res.message || 'Failed to apply leave' };
+    } catch (err) {
+      console.warn('Dynamic applyLeave error:', err.message);
+      return { success: false, message: err.message || 'Failed to apply leave' };
+    }
+  };
+
   // Stats calculation for Admin and callers
   const getTodayTeamStats = () => {
     const todayList = records.filter((r) => r.date === todayStr);
     const totalPresent = todayList.filter((r) => r.status === ATTENDANCE_STATUS.PRESENT).length;
     const totalLate = todayList.filter((r) => r.status === ATTENDANCE_STATUS.LATE).length;
     const totalHalfDay = todayList.filter((r) => r.status === ATTENDANCE_STATUS.HALF_DAY).length;
+    const totalLeave = todayList.filter((r) => r.status === ATTENDANCE_STATUS.LEAVE).length;
     const totalCheckedOut = todayList.filter((r) => r.punchOut).length;
-    const totalActiveNow = todayList.filter((r) => !r.punchOut).length;
+    const totalActiveNow = todayList.filter((r) => !r.punchOut && r.status !== ATTENDANCE_STATUS.LEAVE).length;
 
     return {
       totalEmployees: users.length,
-      punchedInCount: todayList.length,
+      punchedInCount: todayList.filter((r) => r.status !== ATTENDANCE_STATUS.LEAVE).length,
       totalPresent,
       totalLate,
       totalHalfDay,
+      totalLeave,
       totalCheckedOut,
       totalActiveNow,
       absentCount: Math.max(0, users.length - todayList.length),
@@ -184,10 +223,12 @@ export const AttendanceProvider = ({ children }) => {
         todayRecord,
         hasPunchedIn,
         hasPunchedOut,
+        isOnLeave,
         liveDuration,
         loading,
         punchIn,
         punchOut,
+        applyLeave,
         getTodayTeamStats,
         fetchAttendance,
       }}

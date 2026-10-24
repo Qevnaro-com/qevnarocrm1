@@ -188,6 +188,15 @@ export const attendanceAPI = {
     return handleResponse(res);
   },
 
+  applyLeave: async (leaveData) => {
+    const res = await fetch(`${API_BASE}/attendance/leave`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(leaveData),
+    });
+    return handleResponse(res);
+  },
+
   getToday: async () => {
     const res = await fetch(`${API_BASE}/attendance/today`, {
       headers: getHeaders(),

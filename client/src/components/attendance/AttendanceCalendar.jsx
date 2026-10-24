@@ -66,13 +66,17 @@ export const AttendanceCalendar = () => {
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
               Present (P)
             </span>
-            <span className="flex items-center gap-1.5 font-medium text-amber-700">
+            <span className="flex items-center gap-1.5 font-medium text-amber-700" title="Punched in after 11:30 AM">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-              Late (L)
+              Late (L &gt; 11:30 AM)
             </span>
-            <span className="flex items-center gap-1.5 font-medium text-orange-700">
+            <span className="flex items-center gap-1.5 font-medium text-orange-700" title="Checked out before 4:30 PM or < 4 hrs">
               <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
-              Half Day (HD)
+              Half Day (HD &lt; 4:30 PM)
+            </span>
+            <span className="flex items-center gap-1.5 font-medium text-purple-700" title="Approved leave request">
+              <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+              Leave (LV)
             </span>
             <span className="flex items-center gap-1.5 font-medium text-rose-700">
               <span className="w-2.5 h-2.5 rounded-full bg-rose-400"></span>
@@ -178,6 +182,9 @@ export const AttendanceCalendar = () => {
                         badgeContent = 'HD';
                         badgeClass = 'bg-orange-100 text-orange-800 font-bold border-orange-300';
                         userPresentCount += 0.5;
+                      } else if (record.status === ATTENDANCE_STATUS.LEAVE) {
+                        badgeContent = 'LV';
+                        badgeClass = 'bg-purple-100 text-purple-800 font-bold border-purple-300';
                       } else if (record.status === ATTENDANCE_STATUS.ABSENT) {
                         badgeContent = 'A';
                         badgeClass = 'bg-rose-100 text-rose-800 font-bold border-rose-300';
@@ -248,36 +255,68 @@ export const AttendanceCalendar = () => {
             <div className="space-y-2 text-xs">
               <div className="flex justify-between py-1 border-b border-slate-100">
                 <span className="text-slate-500">Status:</span>
-                <span className="font-bold text-emerald-700">{selectedCellRecord.status}</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-slate-100">
-                <span className="text-slate-500">Punch In:</span>
-                <span className="font-mono font-medium">
-                  {new Date(selectedCellRecord.punchIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                <span className={`font-bold px-2 py-0.5 rounded text-[11px] ${
+                  selectedCellRecord.status === 'Present'
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : selectedCellRecord.status === 'Late'
+                    ? 'bg-amber-100 text-amber-800'
+                    : selectedCellRecord.status === 'Leave'
+                    ? 'bg-purple-100 text-purple-800'
+                    : 'bg-orange-100 text-orange-800'
+                }`}>
+                  {selectedCellRecord.status}
                 </span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-100">
-                <span className="text-slate-500">Punch Out:</span>
-                <span className="font-mono font-medium">
-                  {selectedCellRecord.punchOut
-                    ? new Date(selectedCellRecord.punchOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                    : 'Active / Not Checked Out'}
-                </span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-slate-100">
-                <span className="text-slate-500">Total Hours:</span>
-                <span className="font-bold text-brand-navy">
-                  {selectedCellRecord.durationHours ? `${selectedCellRecord.durationHours} hrs` : 'In Progress'}
-                </span>
-              </div>
+
+              {selectedCellRecord.status === 'Leave' ? (
+                <>
+                  <div className="flex justify-between py-1 border-b border-slate-100">
+                    <span className="text-slate-500">Leave Type:</span>
+                    <span className="font-semibold text-purple-700">
+                      {selectedCellRecord.leaveType || 'Full Day Leave'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-100">
+                    <span className="text-slate-500">Leave Status:</span>
+                    <span className="font-semibold text-slate-700">Approved</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex justify-between py-1 border-b border-slate-100">
+                    <span className="text-slate-500">Punch In:</span>
+                    <span className="font-mono font-medium">
+                      {selectedCellRecord.punchIn
+                        ? new Date(selectedCellRecord.punchIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        : '—'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-100">
+                    <span className="text-slate-500">Punch Out:</span>
+                    <span className="font-mono font-medium">
+                      {selectedCellRecord.punchOut
+                        ? new Date(selectedCellRecord.punchOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        : 'Active / In Progress'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-100">
+                    <span className="text-slate-500">Total Hours:</span>
+                    <span className="font-bold text-brand-navy">
+                      {selectedCellRecord.durationHours ? `${selectedCellRecord.durationHours} hrs` : 'In Progress'}
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
 
-            {selectedCellRecord.workSummary && (
+            {(selectedCellRecord.leaveReason || selectedCellRecord.workSummary) && (
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-                  Daily Work Summary:
+                  {selectedCellRecord.status === 'Leave' ? 'Reason for Leave:' : 'Daily Work Summary:'}
                 </p>
-                <p className="text-xs text-slate-700 leading-relaxed">{selectedCellRecord.workSummary}</p>
+                <p className="text-xs text-slate-700 leading-relaxed">
+                  {selectedCellRecord.leaveReason || selectedCellRecord.workSummary}
+                </p>
               </div>
             )}
           </div>

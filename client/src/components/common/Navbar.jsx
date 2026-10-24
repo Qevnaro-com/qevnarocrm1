@@ -20,7 +20,7 @@ import Logo from './Logo';
 
 export const Navbar = ({ onOpenPunchModal, onToggleMobileSidebar }) => {
   const { currentUser, logout, isAdmin, isCaller } = useAuth();
-  const { hasPunchedIn, hasPunchedOut, liveDuration } = useAttendance();
+  const { hasPunchedIn, hasPunchedOut, isOnLeave, liveDuration } = useAttendance();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   return (
@@ -72,17 +72,21 @@ export const Navbar = ({ onOpenPunchModal, onToggleMobileSidebar }) => {
           <button
             onClick={onOpenPunchModal}
             className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-medium border transition-all ${
-              hasPunchedOut
+              isOnLeave
+                ? 'bg-purple-50 text-purple-800 border-purple-200 hover:bg-purple-100 shadow-xs'
+                : hasPunchedOut
                 ? 'bg-slate-100 text-slate-700 border-slate-200'
                 : hasPunchedIn
                 ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100 shadow-xs'
                 : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100 animate-pulse'
             }`}
-            title="Click to manage Punch-in / Punch-out"
+            title="Click to manage Punch-in / Punch-out / Leave"
           >
             <div
               className={`w-2 h-2 rounded-full shrink-0 ${
-                hasPunchedOut
+                isOnLeave
+                  ? 'bg-purple-500'
+                  : hasPunchedOut
                   ? 'bg-slate-400'
                   : hasPunchedIn
                   ? 'bg-emerald-500 animate-ping'
@@ -91,7 +95,9 @@ export const Navbar = ({ onOpenPunchModal, onToggleMobileSidebar }) => {
             />
             <Clock className="w-3.5 h-3.5 shrink-0 hidden sm:inline" />
             <span className="font-semibold truncate max-w-[110px] sm:max-w-none">
-              {hasPunchedOut
+              {isOnLeave
+                ? 'On Leave'
+                : hasPunchedOut
                 ? 'Checked Out'
                 : hasPunchedIn
                 ? `In (${liveDuration.slice(0, 5)})`

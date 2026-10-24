@@ -77,29 +77,46 @@ export const ATTENDANCE_STATUS = {
   PRESENT: 'Present',
   LATE: 'Late',
   HALF_DAY: 'Half Day',
+  LEAVE: 'Leave',
   ABSENT: 'Absent',
 };
 
 export const ATTENDANCE_STATUS_CONFIG = {
   [ATTENDANCE_STATUS.PRESENT]: {
+    label: 'Present',
+    code: 'P',
     bg: 'bg-emerald-50',
     text: 'text-emerald-700',
     border: 'border-emerald-200',
     dot: 'bg-emerald-500',
   },
   [ATTENDANCE_STATUS.LATE]: {
+    label: 'Late',
+    code: 'L',
     bg: 'bg-amber-50',
     text: 'text-amber-700',
     border: 'border-amber-200',
     dot: 'bg-amber-500',
   },
   [ATTENDANCE_STATUS.HALF_DAY]: {
+    label: 'Half Day',
+    code: 'HD',
     bg: 'bg-orange-50',
     text: 'text-orange-700',
     border: 'border-orange-200',
     dot: 'bg-orange-500',
   },
+  [ATTENDANCE_STATUS.LEAVE]: {
+    label: 'On Leave',
+    code: 'LV',
+    bg: 'bg-purple-50',
+    text: 'text-purple-700',
+    border: 'border-purple-200',
+    dot: 'bg-purple-500',
+  },
   [ATTENDANCE_STATUS.ABSENT]: {
+    label: 'Absent',
+    code: 'A',
     bg: 'bg-rose-50',
     text: 'text-rose-700',
     border: 'border-rose-200',
